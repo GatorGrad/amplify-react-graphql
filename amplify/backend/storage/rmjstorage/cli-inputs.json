@@ -1,0 +1,12 @@
+{
+  "resourceName": "rmjstorage",
+  "policyUUID": "7e326a26",
+  "bucketName": "rmjsolutions-dev",
+  "storageAccess": "auth",
+  "guestAccess": [],
+  "authAccess": [
+    "READ"
+  ],
+  "triggerFunction": "NONE",
+  "groupAccess": {}
+}
