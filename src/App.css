@@ -1,38 +1,66 @@
-.App {
+/* App.css */
+
+/* Center the h1 and add some top margin */
+h1 {
+  text-align: center;
+  margin-top: 20px;
+}
+
+/* Add margin to the h2 for spacing */
+h2 {
+  text-align: center;
+  margin-top: 20px;
+  text-decoration: underline;
+}
+
+/* Style for the table */
+.custom-table {
+  border-collapse: collapse;
+  border: 1px solid black;
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+/* Style for table headers and cells */
+.custom-table th,
+.custom-table td {
+  border: 1px solid black;
+  padding: 8px;
   text-align: center;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+/* Set a fixed width for the first column */
+.custom-table th {
+  width: 100px;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+/* Set the background color for all rows */
+.custom-table tr {
+  background-color: gray;
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
+/* Set a different background color when hovering over a row */
+.custom-table tr:hover {
+  background-color: lightgray;
+}
+
+/* Add new styles for the layout */
+.app-container {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+  justify-content: space-between; /* Distribute columns evenly */
 }
 
-.App-link {
-  color: #61dafb;
+.game-column {
+  flex-basis: calc(50% - 10px); /* Adjust column width */
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+/* Add margin to the submit button for spacing */
+button {
+  margin-top: 20px;
+}
+
+body {
+  background-color: blue;
+  margin: 0; /* Reset default margin to ensure full page coverage */
+  padding: 0; /* Reset default padding to ensure full page coverage */
 }

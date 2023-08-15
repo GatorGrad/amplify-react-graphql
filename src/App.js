@@ -1,133 +1,214 @@
-import { API, Storage } from 'aws-amplify';
-import {
-  Button,
-  Flex,
-  Heading,
-  Image,
-  Text,
-  TextField,
-  View,
-  withAuthenticator,
-} from '@aws-amplify/ui-react';
-import { listNotes } from "./graphql/queries";
-import React, { useState, useEffect } from 'react';
-import {
-  createNote as createNoteMutation,
-  deleteNote as deleteNoteMutation,
-} from "./graphql/mutations";
+import React, { useState } from 'react';
+import './App.css';
+import axios from 'axios';
+import { Amplify, Auth } from 'aws-amplify';
+import config from './aws-exports';
+import { withAuthenticator, Button, Heading, Image, View, Card } from '@aws-amplify/ui-react';
+Amplify.configure(config);
 
-const App = ({ signOut }) => {
-  const [notes, setNotes] = useState([]);
+const GameTable = ({ game, selectedWinner, onChange }) => {
+  return (
+    <table className="custom-table">
+      <thead>
+        <tr>
+          <th>Select</th>
+          <th>Team</th>
+          <th>Final Score</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>
+            <input
+              type="radio"
+              name={`game${game.homeTeam}`}
+              value={game.homeTeam}
+              checked={selectedWinner === game.homeTeam}
+              onChange={() => onChange(game, game.homeTeam)}
+            />
+          </td>
+          <td>{game.homeTeam}</td>
+          <td>{game.homeScore}</td>
+        </tr>
+        <tr>
+          <td>
+            <input
+              type="radio"
+              name={`game${game.awayTeam}`}
+              value={game.awayTeam}
+              checked={selectedWinner === game.awayTeam}
+              onChange={() => onChange(game, game.awayTeam)}
+            />
+          </td>
+          <td>{game.awayTeam}</td>
+          <td>{game.awayScore}</td>
+        </tr>
+      </tbody>
+      <tfoot>
+        <tr>
+          <td>
+            <Button onClick={() => submitPick(game, selectedWinner)}>
+              Submit Pick
+            </Button>
+          </td>
+        </tr>
+      </tfoot>
+    </table>
+  );
+};
 
-  useEffect(() => {
-    fetchNotes();
-  }, []);
+const submitPick = async (game, selectedWinner) => {
+  const response = await axios.post('/picks', {
+    gameId: game.id,
+    winner: selectedWinner,
+  });
 
-  async function fetchNotes() {
-    const apiData = await API.graphql({ query: listNotes });
-    const notesFromAPI = apiData.data.listNotes.items;
-    await Promise.all(
-      notesFromAPI.map(async (note) => {
-        if (note.image) {
-          const url = await Storage.get(note.name);
-          note.image = url;
-        }
-        return note;
-      })
-    );
-    setNotes(notesFromAPI);
+  if (response.status === 200) {
+    alert('Pick submitted successfully!');
+  } else {
+    alert('An error occurred while submitting your pick.');
   }
+};
+const App = () => {
+  const [games, setGames] = useState([
+    // Game 1
+    {
+      homeTeam: 'Panthers',
+      homeScore: '',
+      awayTeam: 'Cardinals',
+      awayScore: '',
+    },
+    // Game 2
+    {
+      homeTeam: 'Jets',
+      homeScore: '',
+      awayTeam: 'Bills',
+      awayScore: '',
+    },
+    // Add more games here...
+    // Game 3
+    {
+      homeTeam: 'Team A',
+      homeScore: '',
+      awayTeam: 'Team B',
+      awayScore: '',
+    },
+    // Game 4
+    {
+      homeTeam: 'Team X',
+      homeScore: '',
+      awayTeam: 'Team Y',
+      awayScore: '',
+    },
+    // Game 5
+    {
+      homeTeam: 'Team M',
+      homeScore: '',
+      awayTeam: 'Team N',
+      awayScore: '',
+    },
+    // Game 6
+    {
+      homeTeam: 'Team O',
+      homeScore: '',
+      awayTeam: 'Team P',
+      awayScore: '',
+    },
+    // Game 7
+    {
+      homeTeam: 'Team O',
+      homeScore: '',
+      awayTeam: 'Team P',
+      awayScore: '',
+    },
+    // Game 8
+    {
+      homeTeam: 'Team O',
+      homeScore: '',
+      awayTeam: 'Team P',
+      awayScore: '',
+    },
+    // Game 9
+    {
+      homeTeam: 'Team O',
+      homeScore: '',
+      awayTeam: 'Team P',
+      awayScore: '',
+    },
+    // Game 10
+    {
+      homeTeam: 'Team O',
+      homeScore: '',
+      awayTeam: 'Team P',
+      awayScore: '',
+    },
+    // Add more games here...
+  ]);
+  const [winners, setWinners] = useState(Array(games.length).fill(null));
 
-  async function createNote(event) {
-    event.preventDefault();
-    const form = new FormData(event.target);
-    const image = form.get("image");
-    const data = {
-      name: form.get("name"),
-      description: form.get("description"),
-      image: image.name,
-    };
-    if (!!data.image) await Storage.put(data.name, image);
-    await API.graphql({
-      query: createNoteMutation,
-      variables: { input: data },
+  const handleGameWinnerSelect = (selectedGame, selectedWinner) => {
+    const gameIndex = games.indexOf(selectedGame);
+    setWinners((prevWinners) => {
+      const updatedWinners = [...prevWinners];
+      updatedWinners[gameIndex] =
+        updatedWinners[gameIndex] === selectedWinner ? null : selectedWinner;
+      return updatedWinners;
     });
-    fetchNotes();
-    event.target.reset();
-  }
-  
+  };
 
-  async function deleteNote({ id, name }) {
-    const newNotes = notes.filter((note) => note.id !== id);
-    setNotes(newNotes);
-    await Storage.remove(name);
-    await API.graphql({
-      query: deleteNoteMutation,
-      variables: { input: { id } },
-    });
-  }
+  const handleSignOut = async () => {
+    try {
+      await Auth.signOut();
+    } catch (error) {
+      console.log('Error signing out: ', error);
+    }
+  };
 
   return (
-    <View className="App">
-      <Heading level={1}>My Notes App</Heading>
-      <View as="form" margin="3rem 0" onSubmit={createNote}>
-        <Flex direction="row" justifyContent="center">
-          <TextField
-            name="name"
-            placeholder="Note Name"
-            label="Note Name"
-            labelHidden
-            variation="quiet"
-            required
-          />
-          <TextField
-            name="description"
-            placeholder="Note Description"
-            label="Note Description"
-            labelHidden
-            variation="quiet"
-            required
-          />
-          <View
-            name="image"
-            as="input"
-            type="file"
-            style={{ alignSelf: "end" }}
-          />
-          <Button type="submit" variation="primary">
-            Create Note
-          </Button>
-        </Flex>
-      </View>
-      <Heading level={2}>Current Notes</Heading>
-      <View margin="3rem 0">
-      {notes.map((note) => (
-  <Flex
-    key={note.id || note.name}
-    direction="row"
-    justifyContent="center"
-    alignItems="center"
-  >
-    <Text as="strong" fontWeight={700}>
-      {note.name}
-    </Text>
-    <Text as="span">{note.description}</Text>
-    {note.image && (
-      <Image
-        src={note.image}
-        alt={`visual aid for ${notes.name}`}
-        style={{ width: 400 }}
-      />
-    )}
-    <Button variation="link" onClick={() => deleteNote(note)}>
-      Delete note
-    </Button>
-  </Flex>
-))}
-      </View>
-      <Button onClick={signOut}>Sign Out</Button>
-    </View>
-    
+    <div>
+      <h1>2023 NFL and College Football Schedule</h1>
+
+      <div className="app-container">
+        <div className="game-column">
+          <h2>NFL Week 1</h2>
+          {games.slice(0, Math.ceil(games.length / 2)).map((game, index) => (
+            <div key={index}>
+              <GameTable
+                game={game}
+                selectedWinner={winners[index]}
+                onChange={(selectedGame, selectedWinner) =>
+                  handleGameWinnerSelect(selectedGame, selectedWinner, index)
+                }
+              />
+            </div>
+          ))}
+        </div>
+
+        <div className="game-column">
+          <h2>College Football Week 1</h2>
+          {games.slice(Math.ceil(games.length / 2)).map((game, index) => (
+            <div key={index}>
+              <GameTable
+                game={game}
+                selectedWinner={winners[index + Math.ceil(games.length / 2)]}
+                onChange={(selectedGame, selectedWinner) =>
+                  handleGameWinnerSelect(selectedGame, selectedWinner, index + Math.ceil(games.length / 2))
+                }
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <h3>Selected Winners:</h3>
+      <ul>
+        {winners.map((winner, index) => (
+          <li key={index}>{winner ? winner : 'No winner selected'}</li>
+        ))}
+      </ul>
+
+      <Button onClick={handleSignOut}>Sign Out</Button>
+    </div>
   );
 };
 

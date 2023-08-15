@@ -1,6 +1,17 @@
 /* eslint-disable */
 // this is an auto generated file. This will be overwritten
 
+export const updateSelection = /* GraphQL */ `
+  mutation UpdateSelection($input: UpdateSelectionInput!) {
+    updateSelection(input: $input) {
+      id
+      userID
+      gameIndex
+      winner
+      __typename
+    }
+  }
+`;
 export const createNote = /* GraphQL */ `
   mutation CreateNote(
     $input: CreateNoteInput!
