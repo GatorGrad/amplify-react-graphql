@@ -11,7 +11,7 @@ type Note @model @auth(rules: [ { allow: public } ] ){
 
 type Selection {
   id: ID!
-  userID: String!
+  username: String!
   gameIndex: Int!
   winner: String!
 }
@@ -22,8 +22,9 @@ type Mutation {
 
 input UpdateSelectionInput {
   id: ID!
-  userID: String!
+  username: String!
   gameIndex: Int!
   winner: String!
 }
+
 

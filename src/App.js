@@ -1,10 +1,97 @@
 import React, { useState } from 'react';
 import './App.css';
 import axios from 'axios';
-import { Amplify, Auth } from 'aws-amplify';
+import { Amplify, Auth, API } from 'aws-amplify';
 import config from './aws-exports';
-import { withAuthenticator, Button, Heading, Image, View, Card } from '@aws-amplify/ui-react';
+import { withAuthenticator, Button } from '@aws-amplify/ui-react';
+import * as mutations from './graphql/mutations';
 Amplify.configure(config);
+
+const allWeeksGames = [
+  [
+    // Week 1 games
+    {
+      homeTeam: 'Panthers',
+      homeScore: '',
+      awayTeam: 'Cardinals',
+      awayScore: '',
+    },
+    {
+      homeTeam: 'Jets',
+      homeScore: '',
+      awayTeam: 'Bills',
+      awayScore: '',
+    },
+    // ... Add more games for Week 1 ...
+  ],
+  [
+    // Week 2 games
+    {
+      homeTeam: 'Team A',
+      homeScore: '',
+      awayTeam: 'Team B',
+      awayScore: '',
+    },
+    {
+      homeTeam: 'Team X',
+      homeScore: '',
+      awayTeam: 'Team Y',
+      awayScore: '',
+    },
+    // ... Add more games for Week 2 ...
+  ],
+  // ... Add more weeks of games ...
+  [
+    // Week 2 games
+    {
+      homeTeam: 'Team A',
+      homeScore: '',
+      awayTeam: 'Team B',
+      awayScore: '',
+    },
+    {
+      homeTeam: 'Team X',
+      homeScore: '',
+      awayTeam: 'Team Y',
+      awayScore: '',
+    },
+    // ... Add more games for Week 2 ...
+  ],
+  [
+    // Week 2 games
+    {
+      homeTeam: 'Team A',
+      homeScore: '',
+      awayTeam: 'Team B',
+      awayScore: '',
+    },
+    {
+      homeTeam: 'Team X',
+      homeScore: '',
+      awayTeam: 'Team Y',
+      awayScore: '',
+    },
+    // ... Add more games for Week 2 ...
+  ],
+  [
+    // Week 2 games
+    {
+      homeTeam: 'Team A',
+      homeScore: '',
+      awayTeam: 'Team B',
+      awayScore: '',
+    },
+    {
+      homeTeam: 'Team X',
+      homeScore: '',
+      awayTeam: 'Team Y',
+      awayScore: '',
+    },
+    // ... Add more games for Week 2 ...
+  ],
+];
+
+
 
 const GameTable = ({ game, selectedWinner, onChange }) => {
   return (
@@ -57,101 +144,53 @@ const GameTable = ({ game, selectedWinner, onChange }) => {
   );
 };
 
-const submitPick = async (game, selectedWinner) => {
-  const response = await axios.post('/picks', {
-    gameId: game.id,
-    winner: selectedWinner,
-  });
+const submitPick = async () => {
+  try {
+    const user = await Auth.currentAuthenticatedUser();
+    const username = user.username;
 
-  if (response.status === 200) {
-    alert('Pick submitted successfully!');
-  } else {
-    alert('An error occurred while submitting your pick.');
+    const input = {
+      username: username,
+    };
+
+    const response = await API.graphql({
+      query: mutations.updateSelection,
+      variables: { input },
+    });
+
+    console.log('Selection submitted:', response.data.updateSelection);
+    alert('Username submitted successfully!');
+  } catch (error) {
+    console.error('Error submitting username:', error);
+    console.log('Response:', error.response); // Log the response for further investigation
+    alert('An error occurred while submitting the username.');
   }
+  
 };
-const App = () => {
-  const [games, setGames] = useState([
-    // Game 1
-    {
-      homeTeam: 'Panthers',
-      homeScore: '',
-      awayTeam: 'Cardinals',
-      awayScore: '',
-    },
-    // Game 2
-    {
-      homeTeam: 'Jets',
-      homeScore: '',
-      awayTeam: 'Bills',
-      awayScore: '',
-    },
-    // Add more games here...
-    // Game 3
-    {
-      homeTeam: 'Team A',
-      homeScore: '',
-      awayTeam: 'Team B',
-      awayScore: '',
-    },
-    // Game 4
-    {
-      homeTeam: 'Team X',
-      homeScore: '',
-      awayTeam: 'Team Y',
-      awayScore: '',
-    },
-    // Game 5
-    {
-      homeTeam: 'Team M',
-      homeScore: '',
-      awayTeam: 'Team N',
-      awayScore: '',
-    },
-    // Game 6
-    {
-      homeTeam: 'Team O',
-      homeScore: '',
-      awayTeam: 'Team P',
-      awayScore: '',
-    },
-    // Game 7
-    {
-      homeTeam: 'Team O',
-      homeScore: '',
-      awayTeam: 'Team P',
-      awayScore: '',
-    },
-    // Game 8
-    {
-      homeTeam: 'Team O',
-      homeScore: '',
-      awayTeam: 'Team P',
-      awayScore: '',
-    },
-    // Game 9
-    {
-      homeTeam: 'Team O',
-      homeScore: '',
-      awayTeam: 'Team P',
-      awayScore: '',
-    },
-    // Game 10
-    {
-      homeTeam: 'Team O',
-      homeScore: '',
-      awayTeam: 'Team P',
-      awayScore: '',
-    },
-    // Add more games here...
-  ]);
-  const [winners, setWinners] = useState(Array(games.length).fill(null));
 
-  const handleGameWinnerSelect = (selectedGame, selectedWinner) => {
-    const gameIndex = games.indexOf(selectedGame);
+
+const App = () => {
+  const [currentWeek, setCurrentWeek] = useState(0);
+  const [winners, setWinners] = useState(Array(allWeeksGames[currentWeek].length).fill(null));
+
+  const handleNextWeek = () => {
+    if (currentWeek < allWeeksGames.length - 1) {
+      setCurrentWeek(currentWeek + 1);
+      setWinners(Array(allWeeksGames[currentWeek + 1].length).fill(null));
+    }
+  };
+
+  const handlePreviousWeek = () => {
+    if (currentWeek > 0) {
+      setCurrentWeek(currentWeek - 1);
+      setWinners(Array(allWeeksGames[currentWeek - 1].length).fill(null));
+    }
+  };
+
+  const handleGameWinnerSelect = (selectedGame, selectedWinner, gameIndex) => {
     setWinners((prevWinners) => {
       const updatedWinners = [...prevWinners];
-      updatedWinners[gameIndex] =
-        updatedWinners[gameIndex] === selectedWinner ? null : selectedWinner;
+      updatedWinners[gameIndex] = updatedWinners[gameIndex] === selectedWinner ? null : selectedWinner;
       return updatedWinners;
     });
   };
@@ -166,34 +205,43 @@ const App = () => {
 
   return (
     <div>
-      <h1>2023 NFL and College Football Schedule</h1>
+      <h1>Make Your Picks!</h1>
+
+      <Button onClick={handlePreviousWeek}>Previous Week</Button>
+      <Button onClick={handleNextWeek}>Next Week</Button>
 
       <div className="app-container">
         <div className="game-column">
-          <h2>NFL Week 1</h2>
-          {games.slice(0, Math.ceil(games.length / 2)).map((game, index) => (
+          <h2>NFL Week {currentWeek + 1}</h2>
+          {allWeeksGames[currentWeek].slice(0, Math.ceil(allWeeksGames[currentWeek].length / 2)).map((game, index) => (
             <div key={index}>
+              {/* Render GameTable component here */}
               <GameTable
                 game={game}
+                gameIndex={index} // Pass the index as a prop
                 selectedWinner={winners[index]}
                 onChange={(selectedGame, selectedWinner) =>
                   handleGameWinnerSelect(selectedGame, selectedWinner, index)
                 }
+                submitPick={submitPick} // Pass submitPick function as a prop
               />
             </div>
           ))}
         </div>
 
         <div className="game-column">
-          <h2>College Football Week 1</h2>
-          {games.slice(Math.ceil(games.length / 2)).map((game, index) => (
+          <h2>College Football Week {currentWeek + 1}</h2>
+          {allWeeksGames[currentWeek].slice(Math.ceil(allWeeksGames[currentWeek].length / 2)).map((game, index) => (
             <div key={index}>
+              {/* Render GameTable component here */}
               <GameTable
                 game={game}
-                selectedWinner={winners[index + Math.ceil(games.length / 2)]}
+                gameIndex={index + Math.ceil(allWeeksGames[currentWeek].length / 2)} // Adjust index
+                selectedWinner={winners[index + Math.ceil(allWeeksGames[currentWeek].length / 2)]}
                 onChange={(selectedGame, selectedWinner) =>
-                  handleGameWinnerSelect(selectedGame, selectedWinner, index + Math.ceil(games.length / 2))
+                  handleGameWinnerSelect(selectedGame, selectedWinner, index + Math.ceil(allWeeksGames[currentWeek].length / 2))
                 }
+                submitPick={submitPick} // Pass submitPick function as a prop
               />
             </div>
           ))}
@@ -207,6 +255,7 @@ const App = () => {
         ))}
       </ul>
 
+      {/* Moved the Submit Picks button here */}
       <Button onClick={handleSignOut}>Sign Out</Button>
     </div>
   );
